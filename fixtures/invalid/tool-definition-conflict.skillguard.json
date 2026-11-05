@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "name": "tool-definition-conflict",
+  "tools": {
+    "demo.echo": {
+      "result": {},
+      "throws": { "message": "not allowed" }
+    }
+  },
+  "cases": [{ "name": "noop", "calls": [], "expect": { "calls": [] } }]
+}

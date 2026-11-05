@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Unit, security, and installed-bin tests
+        run: npm test
+
+      - name: "Contract: passing fixtures exit 0"
+        run: node src/cli.js test fixtures/pass
+
+      - name: "Contract: intentional failures exit 1"
+        run: |
+          set +e
+          node src/cli.js test fixtures/fail
+          code=$?
+          test "$code" -eq 1
+
+      - name: "Contract: invalid fixtures exit 2"
+        run: |
+          set +e
+          node src/cli.js test fixtures/invalid
+          code=$?
+          test "$code" -eq 2

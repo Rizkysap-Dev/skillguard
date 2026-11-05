@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "name": "dangerous-key",
+  "tools": { "safe.tool": { "result": {} } },
+  "cases": [
+    {
+      "name": "attempts prototype pollution",
+      "calls": [
+        {
+          "tool": "safe.tool",
+          "arguments": { "__proto__": { "polluted": true }, "safe": true }
+        }
+      ],
+      "expect": { "calls": [] }
+    }
+  ]
+}

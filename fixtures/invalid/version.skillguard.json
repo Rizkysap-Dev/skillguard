@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "name": "wrong-version",
+  "tools": {},
+  "cases": [{ "name": "noop", "calls": [], "expect": { "calls": [] } }]
+}

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "name": "unsafe-integer",
+  "tools": { "demo.echo": { "result": {} } },
+  "cases": [
+    {
+      "name": "argument beyond safe integer range",
+      "calls": [{ "tool": "demo.echo", "arguments": { "id": 9007199254740993 } }],
+      "expect": { "calls": [] }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "name": "basic-pass",
+  "description": "Agent calls the weather mock with the expected arguments.",
+  "target": { "kind": "mcp-tool", "name": "weather.get" },
+  "tools": {
+    "weather.get": { "result": { "city": "Bandung", "tempC": 24 } }
+  },
+  "cases": [
+    {
+      "name": "calls weather with the expected city and units",
+      "calls": [
+        {
+          "tool": "weather.get",
+          "arguments": { "city": "Bandung", "units": "metric" }
+        }
+      ],
+      "expect": {
+        "calls": [
+          {
+            "tool": "weather.get",
+            "arguments": { "city": "Bandung", "units": "metric" }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "name": "wrong-arguments",
+  "description": "Intentional failures: wrong argument value and a missing expected call.",
+  "tools": {
+    "weather.get": { "result": { "tempC": 24 } },
+    "search.web": { "result": { "items": [] } }
+  },
+  "cases": [
+    {
+      "name": "wrong city argument",
+      "calls": [
+        { "tool": "weather.get", "arguments": { "city": "Bandung" } }
+      ],
+      "expect": {
+        "calls": [
+          { "tool": "weather.get", "arguments": { "city": "Jakarta" } }
+        ]
+      }
+    },
+    {
+      "name": "missing second call",
+      "calls": [
+        { "tool": "search.web", "arguments": { "query": "skillguard" } }
+      ],
+      "expect": {
+        "calls": [
+          { "tool": "search.web", "arguments": { "query": "skillguard" } },
+          { "tool": "search.web", "arguments": { "query": "fallback" } }
+        ]
+      }
+    }
+  ]
+}

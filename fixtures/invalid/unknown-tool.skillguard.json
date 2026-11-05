@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "name": "unknown-tool",
+  "tools": { "known.tool": { "result": {} } },
+  "cases": [
+    {
+      "name": "calls a tool that was never declared",
+      "calls": [{ "tool": "ghost.tool", "arguments": {} }],
+      "expect": { "calls": [] }
+    }
+  ]
+}

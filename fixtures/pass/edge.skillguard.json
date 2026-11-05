@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "name": "edge-subset-contains",
+  "description": "Edge cases: subset arguments, contains mode, a throwing mock, unicode, and an empty call list.",
+  "tools": {
+    "search.web": { "result": { "items": [] } },
+    "db.write": { "throws": { "message": "write blocked" } }
+  },
+  "cases": [
+    {
+      "name": "subset args with extra recorded calls",
+      "calls": [
+        {
+          "tool": "search.web",
+          "arguments": { "query": "skill tests", "limit": 5, "lang": "en" }
+        },
+        { "tool": "db.write", "arguments": { "id": "x" } }
+      ],
+      "expect": {
+        "mode": "contains",
+        "calls": [
+          { "tool": "search.web", "arguments": { "query": "skill tests" }, "match": "subset" }
+        ]
+      }
+    },
+    {
+      "name": "unicode arguments",
+      "calls": [
+        { "tool": "search.web", "arguments": { "query": "日本語 — émoji 🚀" } }
+      ],
+      "expect": {
+        "calls": [
+          { "tool": "search.web", "arguments": { "query": "日本語 — émoji 🚀" } }
+        ]
+      }
+    },
+    {
+      "name": "no calls expected",
+      "calls": [],
+      "expect": { "calls": [] }
+    }
+  ]
+}

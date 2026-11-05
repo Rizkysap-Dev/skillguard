@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "name": "unknown-top-level-key",
+  "tools": {},
+  "cases": [{ "name": "noop", "calls": [], "expect": { "calls": [] } }],
+  "runner": { "exec": "process.exit(0)" }
+}

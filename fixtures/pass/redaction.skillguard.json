@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "name": "redaction-pass",
+  "description": "Sensitive arguments still match and never appear in normal output.",
+  "tools": {
+    "vault.read": { "result": { "ok": true } }
+  },
+  "cases": [
+    {
+      "name": "sensitive arguments match",
+      "calls": [
+        {
+          "tool": "vault.read",
+          "arguments": {
+            "username": "dev",
+            "password": "hunter2-password",
+            "api_key": "sk-live-abcdefghijklmnop123456"
+          }
+        }
+      ],
+      "expect": {
+        "calls": [
+          {
+            "tool": "vault.read",
+            "arguments": {
+              "username": "dev",
+              "password": "hunter2-password",
+              "api_key": "sk-live-abcdefghijklmnop123456"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

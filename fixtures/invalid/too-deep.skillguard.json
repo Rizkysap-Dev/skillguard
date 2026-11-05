@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "name": "too-deep",
+  "tools": {
+    "deep.tool": {
+      "result": {}
+    }
+  },
+  "cases": [
+    {
+      "name": "deep args",
+      "calls": [
+        {
+          "tool": "deep.tool",
+          "arguments": {
+            "next": {
+              "next": {
+                "next": {
+                  "next": {
+                    "next": {
+                      "next": {
+                        "next": {
+                          "next": {
+                            "next": {
+                              "next": {
+                                "next": {
+                                  "next": {
+                                    "next": {
+                                      "next": {
+                                        "leaf": true
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "calls": []
+      }
+    }
+  ]
+}
