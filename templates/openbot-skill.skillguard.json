@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "name": "openbot-data-skill-flow",
+  "description": "Validates that an agent using openbot-data inspects tables before executing parameterized queries.",
+  "target": {
+    "kind": "skill",
+    "name": "openbot-data",
+    "path": ".agents/skills/openbot-data/SKILL.md"
+  },
+  "tools": {
+    "openbot.list_tables": {
+      "result": [
+        {
+          "name": "qa_targets",
+          "rowCount": 3,
+          "creator": "agent-qa"
+        }
+      ]
+    },
+    "openbot.query_data": {
+      "result": [
+        {
+          "target": "SkillGuard",
+          "status": "active"
+        }
+      ]
+    },
+    "openbot.execute_data": {
+      "result": {
+        "rowsAffected": 1
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "queries table after listing existing tables",
+      "description": "Agent must inspect available tables first to verify schema before executing SELECT query.",
+      "calls": [
+        {
+          "tool": "openbot.list_tables",
+          "arguments": {}
+        },
+        {
+          "tool": "openbot.query_data",
+          "arguments": {
+            "sql": "SELECT target, status FROM qa_targets WHERE status = ? LIMIT 10;",
+            "params": ["active"]
+          }
+        }
+      ],
+      "expect": {
+        "mode": "exact",
+        "calls": [
+          {
+            "tool": "openbot.list_tables",
+            "arguments": {}
+          },
+          {
+            "tool": "openbot.query_data",
+            "arguments": {
+              "sql": "SELECT target, status FROM qa_targets WHERE status = ? LIMIT 10;",
+              "params": ["active"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "executes parameterized upsert with subset match",
+      "description": "Ensures INSERT uses params placeholder without exposing raw SQL strings.",
+      "calls": [
+        {
+          "tool": "openbot.execute_data",
+          "arguments": {
+            "sql": "INSERT INTO qa_targets (target, status) VALUES (?, ?) ON CONFLICT DO UPDATE SET status = excluded.status;",
+            "params": ["SkillGuard", "verified"]
+          }
+        }
+      ],
+      "expect": {
+        "mode": "exact",
+        "calls": [
+          {
+            "tool": "openbot.execute_data",
+            "match": "subset",
+            "arguments": {
+              "params": ["SkillGuard", "verified"]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

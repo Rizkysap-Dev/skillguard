@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openbot.local/schemas/routine.json",
+  "name": "skillguard-periodic-verification",
+  "description": "Contoh konfigurasi manual non-aktif untuk verifikasi periodik deterministik skill lokal menggunakan SkillGuard.",
+  "active": false,
+  "timezone": "Asia/Jakarta",
+  "schedule": {
+    "kind": "weekdays",
+    "time": "08:30"
+  },
+  "instruction": "Jalankan verifikasi deterministik lokal pada fixture skill OpenBot menggunakan CLI SkillGuard.\n\nInstruksi Kerja (Pseudocode Agen):\n1. Eksekusi perintah command-line lokal: 'node src/cli.js test templates/openbot-skill.skillguard.json --json' di direktori /Users/rizkysap/OpenBot/Shared/SkillGuard menggunakan kemampuan eksekusi shell/terminal lokal yang didukung agen pelaksana.\n2. Evaluasi kode keluar (Exit Code):\n   - Exit Code 0 (PASS): Seluruh ekspektasi cocok. Catat riwayat audit ke shared table 'skillguard_audit_log' jika tersedia, lalu senyap dengan memanggil routine_no_update.\n   - Exit Code 1 (FAIL): Asersi fixture gagal. Laporkan ringkasan kegagalan ke chat mencakup tool atau argumen yang tidak cocok (kredensial otomatis disensor oleh SkillGuard).\n   - Exit Code 2 (INVALID): Kesalahan skema fixture atau sintaks CLI. Laporkan error agar fixture diperbaiki.\n3. Batasan Keamanan:\n   - Dilarang memanggil endpoint jaringan luar atau model LLM evaluasi.\n   - Dilarang melakukan git commit, push, atau publish.\n   - Jaga seluruh laporan tetap lokal dan rapi.",
+  "limitPolicy": "wait",
+  "missedPolicy": "skip"
+}
