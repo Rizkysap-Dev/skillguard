@@ -5,6 +5,7 @@ Deterministic, zero-LLM test runner for Agent Skills and MCP (Model Context Prot
 [![Tests](https://img.shields.io/badge/tests-72%2F72%20passing-22c55e?style=flat-square)](#development)
 [![Node](https://img.shields.io/badge/node-%3E%3D20-3b82f6?style=flat-square)](package.json)
 [![License](https://img.shields.io/badge/license-MIT-zinc?style=flat-square)](package.json)
+[![GitHub stars](https://img.shields.io/github/stars/Rizkysap-Dev/skillguard?style=social)](https://github.com/Rizkysap-Dev/skillguard)
 
 ```bash
 # Run all passing fixtures
