@@ -7,8 +7,10 @@ import { exitCodeOf, buildHumanReport, jsonReportText } from './report.js';
 import { ValidationError, runFixtureSource } from './runner.js';
 import { safeFreeText, safeText } from './redact.js';
 import { VERSION } from './version.js';
+import { AdapterError, initSkillFixture } from './adapters/openbot.js';
 
 const USAGE = `Usage: skillguard test <path> [--json]
+       skillguard init --from-skill <path> [--out <file>]
        skillguard --version
        skillguard --help
 
@@ -83,6 +85,39 @@ export function main(argv) {
   if (args[0] === '--help' || args[0] === '-h') {
     return { text: `${USAGE}\n`, code: 0 };
   }
+  if (args[0] === 'init') {
+    let fromSkill = null;
+    let outPath = null;
+    for (let i = 1; i < args.length; i++) {
+      const arg = args[i];
+      if (arg === '--from-skill') {
+        i++;
+        if (i >= args.length) throw new UsageError('missing value for --from-skill');
+        fromSkill = args[i];
+      } else if (arg === '--out') {
+        i++;
+        if (i >= args.length) throw new UsageError('missing value for --out');
+        outPath = args[i];
+      } else if (arg.startsWith('-')) {
+        throw new UsageError(`unknown option: ${arg}`);
+      } else {
+        throw new UsageError(`unexpected argument: ${arg}`);
+      }
+    }
+    if (!fromSkill) throw new UsageError('missing --from-skill <path>');
+
+    try {
+      const result = initSkillFixture({ skillPath: fromSkill, outputPath: outPath });
+      const displayOut = displayPath(result.outputPath);
+      return { text: `Created fixture: ${displayOut}\n`, code: 0 };
+    } catch (cause) {
+      if (cause instanceof AdapterError) {
+        throw new UsageError(cause.message);
+      }
+      throw cause;
+    }
+  }
+
   if (args[0] !== 'test') throw new UsageError(`unknown command: ${args[0]}`);
 
   let target = null;
