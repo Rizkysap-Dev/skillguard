@@ -8,9 +8,11 @@ import { ValidationError, runFixtureSource } from './runner.js';
 import { safeFreeText, safeText } from './redact.js';
 import { VERSION } from './version.js';
 import { AdapterError, initSkillFixture } from './adapters/openbot.js';
+import { McpAdapterError, initMcpFixture } from './adapters/mcp.js';
 
 const USAGE = `Usage: skillguard test <path> [--json]
        skillguard init --from-skill <path> [--out <file>]
+       skillguard init --from-mcp <path> [--out <file>]
        skillguard --version
        skillguard --help
 
@@ -87,6 +89,7 @@ export function main(argv) {
   }
   if (args[0] === 'init') {
     let fromSkill = null;
+    let fromMcp = null;
     let outPath = null;
     for (let i = 1; i < args.length; i++) {
       const arg = args[i];
@@ -94,6 +97,10 @@ export function main(argv) {
         i++;
         if (i >= args.length) throw new UsageError('missing value for --from-skill');
         fromSkill = args[i];
+      } else if (arg === '--from-mcp') {
+        i++;
+        if (i >= args.length) throw new UsageError('missing value for --from-mcp');
+        fromMcp = args[i];
       } else if (arg === '--out') {
         i++;
         if (i >= args.length) throw new UsageError('missing value for --out');
@@ -104,14 +111,21 @@ export function main(argv) {
         throw new UsageError(`unexpected argument: ${arg}`);
       }
     }
-    if (!fromSkill) throw new UsageError('missing --from-skill <path>');
+    if (fromSkill && fromMcp) {
+      throw new UsageError('cannot specify both --from-skill and --from-mcp');
+    }
+    if (!fromSkill && !fromMcp) {
+      throw new UsageError('missing --from-skill <path> or --from-mcp <path>');
+    }
 
     try {
-      const result = initSkillFixture({ skillPath: fromSkill, outputPath: outPath });
+      const result = fromMcp
+        ? initMcpFixture({ manifestPath: fromMcp, outputPath: outPath })
+        : initSkillFixture({ skillPath: fromSkill, outputPath: outPath });
       const displayOut = displayPath(result.outputPath);
       return { text: `Created fixture: ${displayOut}\n`, code: 0 };
     } catch (cause) {
-      if (cause instanceof AdapterError) {
+      if (cause instanceof AdapterError || cause instanceof McpAdapterError) {
         throw new UsageError(cause.message);
       }
       throw cause;

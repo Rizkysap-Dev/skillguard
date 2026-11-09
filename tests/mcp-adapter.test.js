@@ -220,3 +220,191 @@ test('integration: generateMcpManifestFixture builds a multi-tool SkillGuard v1 
   const runResult = runFixtureSource(fixture);
   assert.equal(runResult.cases.every((c) => c.status === 'pass'), true);
 });
+
+test('initMcpFixture writes fixture to default ./fixtures/mcp/ directory and custom --out path', async () => {
+  const { mkdtempSync, readFileSync, rmSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const path = await import('node:path');
+  const { initMcpFixture } = await import('../src/adapters/mcp.js');
+
+  assert.equal(typeof initMcpFixture, 'function');
+
+  const temp = mkdtempSync(path.join(tmpdir(), 'skillguard-mcp-init-'));
+  try {
+    const manifestPath = path.join(temp, 'manifest.json');
+    const manifest = {
+      name: 'billing-mcp',
+      description: 'Billing MCP tools',
+      tools: [
+        {
+          name: 'billing.get_invoice',
+          description: 'Fetch invoice by ID',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              invoiceId: { type: 'string' },
+              includeItems: { type: 'boolean' },
+            },
+            required: ['invoiceId'],
+          },
+        },
+      ],
+    };
+    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
+
+    // Default output path should be inside ./fixtures/mcp/ relative to cwd
+    const defaultResult = initMcpFixture({
+      manifestPath,
+      cwd: temp,
+    });
+    const expectedDefaultOut = path.join(temp, 'fixtures', 'mcp', 'billing-mcp.skillguard.json');
+    assert.equal(defaultResult.outputPath, expectedDefaultOut);
+    assert.equal(defaultResult.fixture.target.kind, 'mcp-tool');
+
+    const savedDefault = JSON.parse(readFileSync(expectedDefaultOut, 'utf8'));
+    assert.deepEqual(validateFixture(savedDefault), []);
+
+    // Custom output path
+    const customOut = path.join(temp, 'custom', 'my-mcp.skillguard.json');
+    const customResult = initMcpFixture({
+      manifestPath,
+      outputPath: customOut,
+      cwd: temp,
+    });
+    assert.equal(customResult.outputPath, customOut);
+    const savedCustom = JSON.parse(readFileSync(customOut, 'utf8'));
+    assert.deepEqual(validateFixture(savedCustom), []);
+  } finally {
+    rmSync(temp, { recursive: true, force: true });
+  }
+});
+
+test('cli init --from-mcp generates fixture in default ./fixtures/mcp/ and passes skillguard test (exit code 0)', async () => {
+  const { mkdtempSync, rmSync, writeFileSync, existsSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const path = await import('node:path');
+  const { spawnSync } = await import('node:child_process');
+  const { fileURLToPath } = await import('node:url');
+
+  const temp = mkdtempSync(path.join(tmpdir(), 'skillguard-cli-mcp-'));
+  const cliPath = path.join(fileURLToPath(new URL('..', import.meta.url)), 'src', 'cli.js');
+  try {
+    const manifestPath = path.join(temp, 'github-mcp.json');
+    writeFileSync(
+      manifestPath,
+      JSON.stringify({
+        name: 'github-mcp',
+        tools: [
+          {
+            name: 'github.get_repo',
+            description: 'Get repository metadata',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                owner: { type: 'string' },
+                repo: { type: 'string' },
+              },
+              required: ['owner', 'repo'],
+            },
+          },
+        ],
+      }),
+      'utf8',
+    );
+
+    // 1. Run skillguard init --from-mcp without --out (uses default ./fixtures/mcp/)
+    const initDefault = spawnSync(process.execPath, [cliPath, 'init', '--from-mcp', manifestPath], {
+      cwd: temp,
+      encoding: 'utf8',
+    });
+    assert.equal(initDefault.status, 0, initDefault.stdout + initDefault.stderr);
+    assert.match(initDefault.stdout, /fixtures\/mcp\/github-mcp\.skillguard\.json/);
+
+    const defaultGeneratedFile = path.join(temp, 'fixtures', 'mcp', 'github-mcp.skillguard.json');
+    assert.equal(existsSync(defaultGeneratedFile), true);
+
+    // 2. Verify generated fixture passes skillguard test with exit code 0
+    const testDefault = spawnSync(process.execPath, [cliPath, 'test', defaultGeneratedFile], {
+      cwd: temp,
+      encoding: 'utf8',
+    });
+    assert.equal(testDefault.status, 0, testDefault.stdout + testDefault.stderr);
+    assert.match(testDefault.stdout, /Result: PASS/);
+
+    // 3. Run skillguard init --from-mcp with explicit --out
+    const customOut = path.join(temp, 'explicit.skillguard.json');
+    const initCustom = spawnSync(
+      process.execPath,
+      [cliPath, 'init', '--from-mcp', manifestPath, '--out', customOut],
+      {
+        cwd: temp,
+        encoding: 'utf8',
+      },
+    );
+    assert.equal(initCustom.status, 0, initCustom.stdout + initCustom.stderr);
+    assert.match(initCustom.stdout, /explicit\.skillguard\.json/);
+
+    const testCustom = spawnSync(process.execPath, [cliPath, 'test', customOut], {
+      cwd: temp,
+      encoding: 'utf8',
+    });
+    assert.equal(testCustom.status, 0, testCustom.stdout + testCustom.stderr);
+    assert.match(testCustom.stdout, /Result: PASS/);
+  } finally {
+    rmSync(temp, { recursive: true, force: true });
+  }
+});
+
+test('cli init --from-mcp rejects missing file, prototype-polluted manifest, or conflicting flags with exit code 2', async () => {
+  const { mkdtempSync, rmSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const path = await import('node:path');
+  const { spawnSync } = await import('node:child_process');
+  const { fileURLToPath } = await import('node:url');
+
+  const temp = mkdtempSync(path.join(tmpdir(), 'skillguard-cli-mcp-err-'));
+  const cliPath = path.join(fileURLToPath(new URL('..', import.meta.url)), 'src', 'cli.js');
+  try {
+    // Missing value for --from-mcp
+    const missingVal = spawnSync(process.execPath, [cliPath, 'init', '--from-mcp'], {
+      cwd: temp,
+      encoding: 'utf8',
+    });
+    assert.equal(missingVal.status, 2);
+
+    // Non-existent manifest file
+    const notFound = spawnSync(process.execPath, [cliPath, 'init', '--from-mcp', 'nonexistent.json'], {
+      cwd: temp,
+      encoding: 'utf8',
+    });
+    assert.equal(notFound.status, 2);
+
+    // Both --from-skill and --from-mcp provided simultaneously
+    const conflict = spawnSync(
+      process.execPath,
+      [cliPath, 'init', '--from-skill', 'SKILL.md', '--from-mcp', 'manifest.json'],
+      {
+        cwd: temp,
+        encoding: 'utf8',
+      },
+    );
+    assert.equal(conflict.status, 2);
+
+    // Prototype-polluted manifest rejected with exit code 2
+    const pollutedPath = path.join(temp, 'polluted.json');
+    writeFileSync(
+      pollutedPath,
+      '{"tools":[{"name":"bad.tool","inputSchema":{"type":"object","__proto__":{"polluted":true}}}]}',
+      'utf8',
+    );
+    const pollutedRun = spawnSync(process.execPath, [cliPath, 'init', '--from-mcp', pollutedPath], {
+      cwd: temp,
+      encoding: 'utf8',
+    });
+    assert.equal(pollutedRun.status, 2);
+    assert.match(pollutedRun.stderr, /forbidden|prototype/i);
+  } finally {
+    rmSync(temp, { recursive: true, force: true });
+  }
+});
+
