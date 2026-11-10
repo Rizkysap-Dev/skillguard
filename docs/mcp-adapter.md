@@ -50,7 +50,7 @@ Adapter menerima berkas atau objek JSON yang merepresentasikan respons `tools/li
 ### Aturan Validasi Input Manifest
 - **`tools` (Wajib):** Array berisi minimal 1 dan maksimal 64 definisi tool (`LIMITS.maxTools`).
 - **`tools[].name` (Wajib):** String non-kosong yang cocok dengan pola `^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$`.
-- **`tools[].description` (Opsional):** String penjelasan fungsi tool.
+- **`tools[].description` & `description` (Opsional):** String penjelasan fungsi tool atau server; secara otomatis dipangkas maksimal `2,000` karakter (`slice(0, 2000)`) agar selalu memenuhi batas validasi skema `validateFixture`.
 - **`tools[].inputSchema` (Opsional):** Objek JSON Schema dengan `type: "object"`, `properties` berupa objek skema properti, dan `required` berupa array nama properti bertipe string.
 - Tipe properti JSON Schema yang didukung: `string`, `number`, `integer`, `boolean`, `array`, `object`, dan `null`.
 
@@ -63,7 +63,7 @@ MCP Adapter memetakan manifest MCP ke dalam struktur kontrak `*.skillguard.json`
 | Elemen Manifest MCP | Properti Fixture SkillGuard | Tipe | Keterangan Pemetaan |
 |:---|:---|:---:|:---|
 | `name` (atau `tools[0].name`) | `target.name` & `name` | `string` | Nama server/tool disanitasi menjadi `<name>-mcp-suite` (manifest) atau `<name>-mcp-fixture` (tool tunggal). |
-| `description` | `description` | `string` | Deskripsi suite pengujian; menggunakan fallback deskripsi otomatis bila tidak tersedia. |
+| `description` | `description` | `string` | Deskripsi suite pengujian ($\le 2,000$ karakter); menggunakan fallback deskripsi otomatis bila tidak tersedia. |
 | Path berkas manifest | `target.path` | `string` | Path relatif ke berkas manifest sumber (misal: `manifests/github-mcp.json`). |
 | Klasifikasi komponen | `target.kind` | `string` | Wajib bernilai `"mcp-tool"`. |
 | `tools[].name` | `tools[toolName]` | `object` | Didaftarkan pada mock registry dengan nilai kembalian standar `{ "result": { "ok": true } }`. |

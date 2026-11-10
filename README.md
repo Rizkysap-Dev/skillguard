@@ -145,7 +145,7 @@ To prevent resource exhaustion when running untrusted fixtures, SkillGuard enfor
 SkillGuard can deterministically generate v1 `*.skillguard.json` fixtures directly from OpenBot `SKILL.md` files or Model Context Protocol (MCP) tool manifests with zero LLM usage:
 
 ```bash
-# Ingest an OpenBot SKILL.md into ./fixtures/skills/<name>.skillguard.json
+# Ingest an OpenBot SKILL.md into <skill-dir>/<name>.skillguard.json (same directory as SKILL.md)
 node src/cli.js init --from-skill path/to/SKILL.md
 
 # Ingest an OpenBot SKILL.md to a custom output path

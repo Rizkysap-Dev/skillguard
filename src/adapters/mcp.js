@@ -92,7 +92,7 @@ function normalizeMcpToolDef(rawTool, index = 0) {
     if (typeof rawTool.description !== 'string') {
       throw new McpAdapterError(`${pathPrefix}.description must be a string`);
     }
-    description = rawTool.description.trim();
+    description = rawTool.description.trim().slice(0, 2000);
   }
 
   const rawSchema = rawTool.inputSchema !== undefined ? rawTool.inputSchema : { type: 'object', properties: {} };
@@ -397,7 +397,7 @@ export function generateMcpManifestFixture(manifestData, { filePath = undefined 
     name: `${sanitizedServer}-mcp-suite`,
     description:
       isPlainObject(rawObj) && typeof rawObj.description === 'string' && rawObj.description.trim()
-        ? rawObj.description.trim()
+        ? rawObj.description.trim().slice(0, 2000)
         : `Automated SkillGuard MCP fixture suite for ${serverName}`,
     target,
     tools: toolsMap,
