@@ -219,6 +219,23 @@ test('integration: generateMcpManifestFixture builds a multi-tool SkillGuard v1 
 
   const runResult = runFixtureSource(fixture);
   assert.equal(runResult.cases.every((c) => c.status === 'pass'), true);
+
+  // Verify descriptions longer than 2000 characters are truncated to 2000 and still pass validateFixture
+  const longDesc = 'A'.repeat(2500);
+  const longFixture = generateMcpManifestFixture({
+    name: 'long-desc-mcp',
+    description: longDesc,
+    tools: [
+      {
+        name: 'demo.long_tool',
+        description: longDesc,
+        inputSchema: { type: 'object', properties: {} },
+      },
+    ],
+  });
+  assert.equal(longFixture.description.length, 2000);
+  assert.equal(longFixture.cases[0].description.length, 2000);
+  assert.deepEqual(validateFixture(longFixture), []);
 });
 
 test('initMcpFixture writes fixture to default ./fixtures/mcp/ directory and custom --out path', async () => {

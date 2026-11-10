@@ -2,7 +2,7 @@
 
 Deterministic, zero-LLM test runner for Agent Skills and MCP (Model Context Protocol) Tools. Write declarative mock tool-call assertions, run them locally or in CI, and catch tool misuses in sub-seconds.
 
-[![Tests](https://img.shields.io/badge/tests-72%2F72%20passing-22c55e?style=flat-square)](#development)
+[![Tests](https://img.shields.io/badge/tests-89%2F89%20passing-22c55e?style=flat-square)](#development)
 [![Node](https://img.shields.io/badge/node-%3E%3D20-3b82f6?style=flat-square)](package.json)
 [![License](https://img.shields.io/badge/license-MIT-zinc?style=flat-square)](package.json)
 [![GitHub stars](https://img.shields.io/github/stars/Rizkysap-Dev/skillguard?style=social)](https://github.com/Rizkysap-Dev/skillguard)
@@ -16,6 +16,10 @@ node src/cli.js test fixtures/fail/wrong-arguments.skillguard.json
 
 # Output machine-readable JSON
 node src/cli.js test fixtures/pass --json
+
+# Generate a fixture from an OpenBot SKILL.md or MCP tools manifest
+node src/cli.js init --from-skill path/to/SKILL.md
+node src/cli.js init --from-mcp path/to/mcp-manifest.json
 ```
 
 ---
@@ -136,10 +140,32 @@ To prevent resource exhaustion when running untrusted fixtures, SkillGuard enfor
 
 ---
 
+## CLI Fixture Ingestion (`skillguard init`)
+
+SkillGuard can deterministically generate v1 `*.skillguard.json` fixtures directly from OpenBot `SKILL.md` files or Model Context Protocol (MCP) tool manifests with zero LLM usage:
+
+```bash
+# Ingest an OpenBot SKILL.md into <skill-dir>/<name>.skillguard.json (same directory as SKILL.md)
+node src/cli.js init --from-skill path/to/SKILL.md
+
+# Ingest an OpenBot SKILL.md to a custom output path
+node src/cli.js init --from-skill path/to/SKILL.md --out fixtures/custom-skill.skillguard.json
+
+# Ingest an MCP server tools manifest into ./fixtures/mcp/<name>.skillguard.json
+node src/cli.js init --from-mcp path/to/mcp-manifest.json
+
+# Ingest an MCP server tools manifest to a custom output path
+node src/cli.js init --from-mcp path/to/mcp-manifest.json --out fixtures/custom-mcp.skillguard.json
+```
+
+---
+
 ## Documentation
 
 - [Architecture & Runtime Specification](docs/spec-architecture.md)
 - [Fixture Authoring Guide & Recipes](docs/fixture-guide.md)
+- [OpenBot Skill Adapter Specification](docs/openbot-adapter.md)
+- [MCP Tool Adapter Specification](docs/mcp-adapter.md)
 
 ---
 
