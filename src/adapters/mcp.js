@@ -1,3 +1,5 @@
+import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import { isPlainObject, cloneJson } from '../json.js';
 import { LIMITS } from '../schema.js';
 
@@ -402,3 +404,44 @@ export function generateMcpManifestFixture(manifestData, { filePath = undefined 
     cases,
   };
 }
+
+/**
+ * Ingests a local MCP manifest JSON file and writes a SkillGuard v1 fixture (*.skillguard.json).
+ * Defaults to writing under `./fixtures/mcp/<sanitized-name>.skillguard.json` relative to `cwd`.
+ */
+export function initMcpFixture({ manifestPath, outputPath = null, cwd = process.cwd() }) {
+  const absoluteManifestPath = path.resolve(cwd, manifestPath);
+  let stat;
+  try {
+    stat = statSync(absoluteManifestPath);
+  } catch {
+    throw new McpAdapterError(`MCP manifest file not found: ${manifestPath}`);
+  }
+
+  if (!stat.isFile()) {
+    throw new McpAdapterError(`target is not a file: ${manifestPath}`);
+  }
+
+  if (stat.size > LIMITS.maxFileBytes) {
+    throw new McpAdapterError(`MCP manifest file exceeds maximum limit of ${LIMITS.maxFileBytes} bytes`);
+  }
+
+  const content = readFileSync(absoluteManifestPath, 'utf8');
+  const relativePath = path.relative(cwd, absoluteManifestPath).split(path.sep).join('/');
+  const fixture = generateMcpManifestFixture(content, { filePath: relativePath });
+
+  const sanitizedTargetName = fixture.target.name.replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 80);
+  const resolvedOutPath = outputPath
+    ? path.resolve(cwd, outputPath)
+    : path.resolve(cwd, 'fixtures', 'mcp', `${sanitizedTargetName}.skillguard.json`);
+
+  mkdirSync(path.dirname(resolvedOutPath), { recursive: true });
+  const jsonText = JSON.stringify(fixture, null, 2) + '\n';
+  writeFileSync(resolvedOutPath, jsonText, 'utf8');
+
+  return {
+    outputPath: resolvedOutPath,
+    fixture,
+  };
+}
+
